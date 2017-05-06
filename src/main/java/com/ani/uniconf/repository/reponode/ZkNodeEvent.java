@@ -1,4 +1,4 @@
-package com.ani.uniconf.repository.event;
+package com.ani.uniconf.repository.reponode;
 
 import com.ani.utils.core.AniMapBuilder;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
@@ -27,12 +27,12 @@ public class ZkNodeEvent extends NodeEvent {
         super();
     }
 
-    public ZkNodeEvent(String path, NodeEventType nodeEventType, byte[] data) {
-        super(path, nodeEventType, data);
+    public ZkNodeEvent(String path, NodeEventType nodeEventType, RepoNode node) {
+        super(path, nodeEventType, node);
     }
 
-    public ZkNodeEvent(String path, PathChildrenCacheEvent.Type childrenNodeEventType, byte[] data) {
-        super(path, childrenNodeEventTypeMap.get(childrenNodeEventType), data);
+    public ZkNodeEvent(String path, PathChildrenCacheEvent.Type childrenNodeEventType, RepoNode node) {
+        super(path, childrenNodeEventTypeMap.get(childrenNodeEventType), node);
     }
 
     @Override

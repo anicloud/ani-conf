@@ -1,6 +1,4 @@
-package com.ani.uniconf.repository.event;
-
-import com.ani.uniconf.repository.event.NodeEventType;
+package com.ani.uniconf.repository.reponode;
 
 /**
  * Created by yeh on 16-12-23.
