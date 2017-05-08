@@ -18,8 +18,7 @@ public class Uniconf {
 
     private String clusterName;
 
-    public Uniconf() {
-    }
+    public Uniconf() {}
 
     public Uniconf(ConfRepoConnector connector, String clusterName) {
         this.connector = connector;
@@ -30,7 +29,7 @@ public class Uniconf {
             String role,
             byte[] hostIp,
             byte[] data,
-            NodeEventListener hostEventListener
+            NodeEventListener hostNodeEventListener
     ) throws AniDataException {
         HostNode curHost = new HostNode(
                 this.clusterName,
@@ -39,8 +38,8 @@ public class Uniconf {
                 data,
                 this.connector
         );
-        if (hostEventListener != null) {
-            curHost.setEventListener(hostEventListener);
+        if (hostNodeEventListener != null) {
+            curHost.setEventListener(hostNodeEventListener);
         }
         curHost.create();
         return curHost;

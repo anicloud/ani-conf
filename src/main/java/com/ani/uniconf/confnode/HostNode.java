@@ -4,7 +4,13 @@ import com.ani.uniconf.repository.reponode.NodeCreateMode;
 import com.ani.uniconf.repository.reponode.NodeEvent;
 import com.ani.uniconf.repository.reponode.NodeEventListener;
 import com.ani.uniconf.repository.ConfRepoConnector;
+import com.ani.uniconf.repository.reponode.NodeEventType;
+import com.ani.uniconf.tx.DistTx;
+import com.ani.uniconf.tx.TxEventListener;
+import com.ani.uniconf.tx.TxExecutor;
+import com.ani.utils.core.AniByte;
 import com.ani.utils.exception.AniDataException;
+import com.ani.utils.exception.AniRuleException;
 import org.apache.commons.lang3.ArrayUtils;
 
 /**
@@ -32,19 +38,21 @@ public class HostNode extends ConfNode {
 
     /**
      * Get current host role node path
+     *
      * @return "/{clusterName}/{confType}/{hostRole}/{hostIp}:{data}"
      */
     protected String[] getNodePath() {
         return ArrayUtils.addAll(
                 this.getNodeRootPath(),
-                new String[] {
+                new String[]{
                         String.valueOf(this.hostIp)
                 });
     }
 
     private String nodePathStr;
-    protected String getNodePathStr(){
-        if(this.nodePathStr == null) {
+
+    protected String getNodePathStr() {
+        if (this.nodePathStr == null) {
             StringBuilder nodePathStrBuilder = new StringBuilder("/");
             nodePathStrBuilder.append(
                     String.join("/", this.getNodePath())
@@ -74,9 +82,72 @@ public class HostNode extends ConfNode {
         });
     }
 
+    private DistTx hostLostTx;
+
+    public interface HostFailureListener {
+
+        public void onHostHaltingFailed(byte[] hostIp);
+
+        public void onFailureProcessingFinished(byte[] hostIp);
+
+    }
+
+    public void setHostNodeHaltingFailureHandlingTx(
+            final String role,
+            final HostFailureListener hostFailureListener)
+            throws AniDataException, AniRuleException {
+        String[] roleRootPath = getNodeRootPathByRole(role);
+        this.connector.getChildrenNodesPath(roleRootPath, new NodeEventListener() {
+            public void processEvent(NodeEvent event) {
+                if (event.nodeEventType != NodeEventType.CHILD_REMOVED) {
+                    return;
+                }
+                try {
+                    final String hostIpByteStr = event.path;
+                    final byte[] hostIpByte = new AniByte(hostIpByteStr).getBytes();
+                    createNodeHalingFailureHandlingTx(
+                            role,
+                            hostIpByteStr,
+                            new TxExecutor() {
+                                public void execute(DistTx tx) {
+                                    hostFailureListener.onHostHaltingFailed(
+                                            hostIpByte
+                                    );
+                                }
+
+                                public void onFinished(DistTx tx) {
+                                    hostFailureListener.onFailureProcessingFinished(
+                                            hostIpByte
+                                    );
+                                }
+                            },
+                            null);
+                } catch (AniDataException e) {
+                    e.printStackTrace();
+                } catch (AniRuleException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private void createNodeHalingFailureHandlingTx(
+            String role, String hostIpByteStr, TxExecutor hostLostTxExecutor, TxEventListener eventListener
+    ) throws AniDataException, AniRuleException {
+        String topic = String.format("%s-host-halting-failure", role);
+        hostLostTx = new DistTx(
+                this.clusterName,
+                topic,
+                hostIpByteStr,
+                hostLostTxExecutor,
+                eventListener,
+                this.connector);
+        hostLostTx.start();
+    }
+
     @Override
     public void terminate() throws AniDataException {
-
+        //TODO
     }
 
 }

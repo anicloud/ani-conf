@@ -219,7 +219,7 @@ public class ZkConnector extends ConfRepoConnector {
                 childrenCache.getListenable().addListener(new PathChildrenCacheListener() {
                     public void childEvent(CuratorFramework curatorFramework, PathChildrenCacheEvent event) throws Exception {
                         nodeEventListener.processEvent(new ZkNodeEvent(
-                                event.getData().getPath(),
+                                getPathTail(event.getData().getPath()),
                                 event.getType(),
                                 getRepoNodeFromStat(
                                         event.getData().getData(),
@@ -233,6 +233,13 @@ public class ZkConnector extends ConfRepoConnector {
             e.printStackTrace();
             throw new AniRuleException("ANI_CONF_ZK_GET_CHILDREN_NODE_EXCEPTION : " + e.getMessage());
         }
+    }
+
+    private String getPathTail(String fullPath){
+        if(fullPath == null) return "";
+        String[] fullPathSegments = fullPath.split("/");
+        if(fullPathSegments == null || fullPathSegments.length < 1) return fullPath;
+        return fullPathSegments[fullPathSegments.length - 1];
     }
 
     @Override

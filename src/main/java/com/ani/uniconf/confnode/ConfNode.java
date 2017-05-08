@@ -31,7 +31,8 @@ public abstract class ConfNode {
 
     protected ConfRepoConnector connector;
 
-    public ConfNode() {}
+    public ConfNode() {
+    }
 
     public ConfNode(
             String clusterName,
@@ -46,21 +47,22 @@ public abstract class ConfNode {
         this.connector = connector;
     }
 
-    public void setConnector(ConfRepoConnector connector){
+    public void setConnector(ConfRepoConnector connector) {
         this.connector = connector;
     }
 
-    public ConfRepoConnector getConnector(){
+    public ConfRepoConnector getConnector() {
         return this.connector;
     }
 
     /**
      * Get current node path
+     *
      * @return "/{clusterName}/{confType}"
      */
     protected abstract String[] getNodePath();
 
-    protected String[] getNodeRootPath(){
+    protected String[] getNodeRootPath() {
         return new String[]{
                 this.clusterName,
                 this.confType.name().toLowerCase(),
@@ -68,22 +70,34 @@ public abstract class ConfNode {
         };
     }
 
+    protected String[] getNodeRootPathByRole(String role) {
+        if(role == null) role = this.role;
+        return new String[]{
+                this.clusterName,
+                this.confType.name().toLowerCase(),
+                role
+        };
+    }
+
     /**
      * Create configuration node.
+     *
      * @throws AniDataException
      */
     public abstract void create() throws AniDataException;
 
     /**
      * Set event before listen
+     *
      * @param eventListener
      */
-    public void setEventListener(NodeEventListener eventListener){
+    public void setEventListener(NodeEventListener eventListener) {
         this.eventListener = eventListener;
     }
 
     /**
      * Listen to node data or children node changes
+     *
      * @throws AniRuleException
      * @throws AniDataException
      */
@@ -91,6 +105,7 @@ public abstract class ConfNode {
 
     /**
      * Terminate current node listener and jobs
+     *
      * @throws AniDataException
      */
     public abstract void terminate() throws AniDataException;
