@@ -73,6 +73,7 @@ public class HostNode extends ConfNode {
 
     @Override
     public void listen() throws AniDataException {
+        if(this.eventListener == null) return;
         final NodeEventListener curNodeListener = this.eventListener;
         this.connector.getNode(getNodePath(), new NodeEventListener() {
             public void processEvent(NodeEvent event) {
@@ -86,9 +87,9 @@ public class HostNode extends ConfNode {
 
     public interface HostFailureListener {
 
-        public void onHostHaltingFailed(byte[] hostIp);
+        public void onHostHaltingFailed(AniByte hostIp);
 
-        public void onFailureProcessingFinished(byte[] hostIp);
+        public void onFailureProcessingFinished(AniByte hostIp);
 
     }
 
@@ -104,7 +105,7 @@ public class HostNode extends ConfNode {
                 }
                 try {
                     final String hostIpByteStr = event.path;
-                    final byte[] hostIpByte = new AniByte(hostIpByteStr).getBytes();
+                    final AniByte hostIpByte = new AniByte(hostIpByteStr);
                     createNodeHalingFailureHandlingTx(
                             role,
                             hostIpByteStr,

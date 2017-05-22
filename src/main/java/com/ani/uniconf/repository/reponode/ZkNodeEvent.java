@@ -32,7 +32,7 @@ public class ZkNodeEvent extends NodeEvent {
     }
 
     public ZkNodeEvent(String path, PathChildrenCacheEvent.Type childrenNodeEventType, RepoNode node) {
-        super(path, childrenNodeEventTypeMap.get(childrenNodeEventType), node);
+        super(path, childrenNodeEventTypeMap.get(childrenNodeEventType.ordinal()), node);
     }
 
     @Override
