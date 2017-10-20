@@ -25,7 +25,7 @@ public class TestUniconf {
     @Test
     public void testHostInit() throws InterruptedException {
         try {
-            uniconf.initHost("slave", new byte[]{(byte) 127, (byte) 0, (byte) 0, (byte) 1},
+            uniconf.initHost("slave", "127.0.0.1",
                     new byte[]{},
                     new NodeEventListener() {
                         public void processEvent(NodeEvent event) {

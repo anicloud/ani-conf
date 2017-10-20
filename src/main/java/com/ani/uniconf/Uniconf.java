@@ -27,7 +27,7 @@ public class Uniconf {
 
     public HostNode initHost(
             String role,
-            byte[] hostIp,
+            String hostIp,
             byte[] data,
             NodeEventListener hostNodeEventListener
     ) throws AniDataException {

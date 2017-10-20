@@ -18,7 +18,7 @@ import org.apache.commons.lang3.ArrayUtils;
  */
 public class HostNode extends ConfNode {
 
-    private byte[] hostIp;
+    private String hostIp;
 
     public HostNode() {
         super();
@@ -27,7 +27,7 @@ public class HostNode extends ConfNode {
     public HostNode(
             String clusterName,
             String role,
-            byte[] hostIp,
+            String hostIp,
             byte[] data,
             ConfRepoConnector connector) throws AniDataException {
         super(clusterName, ConfType.HOST, role, data, connector);
@@ -44,9 +44,7 @@ public class HostNode extends ConfNode {
     protected String[] getNodePath() {
         return ArrayUtils.addAll(
                 this.getNodeRootPath(),
-                new String[]{
-                        String.valueOf(this.hostIp)
-                });
+                hostIp);
     }
 
     private String nodePathStr;
@@ -73,7 +71,7 @@ public class HostNode extends ConfNode {
 
     @Override
     public void listen() throws AniDataException {
-        if(this.eventListener == null) return;
+        if (this.eventListener == null) return;
         final NodeEventListener curNodeListener = this.eventListener;
         this.connector.getNode(getNodePath(), new NodeEventListener() {
             public void processEvent(NodeEvent event) {
@@ -87,12 +85,20 @@ public class HostNode extends ConfNode {
 
     public interface HostFailureListener {
 
-        public void onHostHaltingFailed(AniByte hostIp);
+        public void onHostHaltingFailed(String hostIp);
 
-        public void onFailureProcessingFinished(AniByte hostIp);
+        public void onFailureProcessingFinished(String hostIp);
 
     }
 
+    /**
+     * Detect host halting failures in cluster.
+     *
+     * @param role
+     * @param hostFailureListener
+     * @throws AniDataException
+     * @throws AniRuleException
+     */
     public void setHostNodeHaltingFailureHandlingTx(
             final String role,
             final HostFailureListener hostFailureListener)
@@ -104,21 +110,20 @@ public class HostNode extends ConfNode {
                     return;
                 }
                 try {
-                    final String hostIpByteStr = event.path;
-                    final AniByte hostIpByte = new AniByte(hostIpByteStr);
+                    final String hostIpStr = event.path;
                     createNodeHalingFailureHandlingTx(
                             role,
-                            hostIpByteStr,
+                            hostIpStr,
                             new TxExecutor() {
                                 public void execute(DistTx tx) {
                                     hostFailureListener.onHostHaltingFailed(
-                                            hostIpByte
+                                            hostIpStr
                                     );
                                 }
 
                                 public void onFinished(DistTx tx) {
                                     hostFailureListener.onFailureProcessingFinished(
-                                            hostIpByte
+                                            hostIpStr
                                     );
                                 }
                             },

@@ -60,44 +60,44 @@ public class TestHostNode {
         int masterNum = 10;
         int slaveNum = 10;
         final CountDownLatch latch = new CountDownLatch(1);
-        for(int i = 0; i < masterNum; i++){
+        for (int i = 0; i < masterNum; i++) {
             final int finalI = i;
             new Thread(new Runnable() {
                 public void run() {
                     try {
-                        try {
-                            initNode("master", finalI)
-                                    .setHostNodeHaltingFailureHandlingTx(
-                                            "slave",
-                                            new HostNode.HostFailureListener() {
-                                                public void onHostHaltingFailed(AniByte hostIp) {
-                                                    String msg = String.format("Host halted: %s", hostIp.toString()).toString();
-                                                    System.out.println(msg);
-                                                }
+                        initNode("master", finalI)
+                                .setHostNodeHaltingFailureHandlingTx(
+                                        "slave",
+                                        new HostNode.HostFailureListener() {
+                                            public void onHostHaltingFailed(String hostIp) {
+                                                String msg = String.format(
+                                                        "Host halted: %s, by master %d",
+                                                        hostIp.toString(),
+                                                        finalI).toString();
+                                                System.out.println(msg);
+                                            }
 
-                                                public void onFailureProcessingFinished(AniByte hostIp) {
-
-                                                }
-                                            });
-                        } catch (AniRuleException e) {
-                            e.printStackTrace();
-                        }
+                                            public void onFailureProcessingFinished(String hostIp) {
+                                                System.out.println(hostIp.toString());
+                                            }
+                                        });
                         latch.await();
                     } catch (AniDataException e) {
                         e.printStackTrace();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                    } catch (AniRuleException e) {
+                        e.printStackTrace();
                     }
                 }
             }).start();
         }
-        for(int j = 0; j < slaveNum; j++){
+        for (int j = 0; j < slaveNum; j++) {
             final int finalJ = j;
             new Thread(new Runnable() {
                 public void run() {
                     try {
                         initNode("slave", finalJ);
-                        Thread.currentThread().interrupt();
                     } catch (AniDataException e) {
                         e.printStackTrace();
                     }
@@ -111,7 +111,7 @@ public class TestHostNode {
         HostNode curNode = new HostNode(
                 "bj-test",
                 role,
-                new byte[]{(byte) 127, (byte) 0, (byte) 0, (byte) num},
+                "127.0.0." + num,
                 new byte[]{},
                 zkCon
         );
