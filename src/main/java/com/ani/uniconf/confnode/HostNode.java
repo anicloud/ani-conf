@@ -113,7 +113,7 @@ public class HostNode extends ConfNode {
                     final String hostIpStr = event.path;
                     createNodeHalingFailureHandlingTx(
                             role,
-                            hostIpStr,
+                            String.format("%s_%d", hostIpStr, event.node.createTime.getTime()),
                             new TxExecutor() {
                                 public void execute(DistTx tx) {
                                     hostFailureListener.onHostHaltingFailed(
@@ -138,13 +138,13 @@ public class HostNode extends ConfNode {
     }
 
     private void createNodeHalingFailureHandlingTx(
-            String role, String hostIpByteStr, TxExecutor hostLostTxExecutor, TxEventListener eventListener
+            String role, String hostIpStr, TxExecutor hostLostTxExecutor, TxEventListener eventListener
     ) throws AniDataException, AniRuleException {
         String topic = String.format("%s-host-halting-failure", role);
         hostLostTx = new DistTx(
                 this.clusterName,
                 topic,
-                hostIpByteStr,
+                hostIpStr,
                 hostLostTxExecutor,
                 eventListener,
                 this.connector);

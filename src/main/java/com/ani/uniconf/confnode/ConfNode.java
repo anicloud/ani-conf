@@ -6,6 +6,8 @@ import com.ani.uniconf.repository.reponode.RepoNodeVersion;
 import com.ani.utils.exception.AniDataException;
 import com.ani.utils.exception.AniRuleException;
 
+import java.sql.Time;
+
 /**
  * Created by yeh on 16-12-23.
  */
@@ -26,6 +28,8 @@ public abstract class ConfNode {
     protected byte[] data;
 
     protected RepoNodeVersion version;
+
+    protected Time createTime;
 
     protected NodeEventListener eventListener;
 
@@ -110,4 +114,35 @@ public abstract class ConfNode {
      */
     public abstract void terminate() throws AniDataException;
 
+    /**
+     * Set current node version
+     * @param version
+     */
+    public void setVersion(RepoNodeVersion version) {
+        this.version = version;
+    }
+
+    /**
+     * Get current node version
+     * @return
+     */
+    public RepoNodeVersion getVersion() {
+        return version;
+    }
+
+    /**
+     * Set current node create time
+     * @param createTime
+     */
+    public void setCreateTime(Time createTime) {
+        this.createTime = createTime;
+    }
+
+    /**
+     * Get current node create time
+     * @return
+     */
+    public Time getCreateTime() {
+        return createTime;
+    }
 }

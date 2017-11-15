@@ -13,6 +13,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 
+import java.sql.Time;
 import java.util.List;
 
 /**
@@ -82,11 +83,13 @@ public class ZkConnector extends ConfRepoConnector {
                     .creatingParentContainersIfNeeded()
                     .withMode(getNodeCreateMode(nodeCreateMode))
                     .forPath(pathStr, nodeData);
+            return new RepoNode(nodeData, new RepoNodeVersion(),
+                    new Time(this.client.checkExists().forPath(pathStr).getCtime()));
         } catch (Exception e) {
             e.printStackTrace();
             throw generateNodeDataException("NODE_CREATE_FAILED", pathStr, e);
         }
-        return new RepoNode(nodeData, new RepoNodeVersion());
+
     }
 
     @Override
@@ -100,7 +103,7 @@ public class ZkConnector extends ConfRepoConnector {
                             pathStr,
                             nodeData
                     );
-            curNode = new RepoNode(nodeData, new RepoNodeVersion());
+            curNode = new RepoNode(nodeData, new RepoNodeVersion(), new Time(0l));
         } catch (Exception e) {
             Stat curState = null;
             try {
@@ -122,13 +125,14 @@ public class ZkConnector extends ConfRepoConnector {
     }
 
     private RepoNode getRepoNodeFromStat(byte[] data, Stat nodeStat) {
-        if (nodeStat == null) return new RepoNode(data, new RepoNodeVersion());
+        if (nodeStat == null) return new RepoNode(data, new RepoNodeVersion(), new Time(0l));
         return new RepoNode(
                 data,
                 new RepoNodeVersion(
                         nodeStat.getVersion(),
                         nodeStat.getCversion()
-                ));
+                ),
+                new Time(nodeStat.getCtime()));
     }
 
     public RepoNode getNode(String[] nodePath) throws AniDataException {
@@ -140,7 +144,8 @@ public class ZkConnector extends ConfRepoConnector {
             node = new RepoNode(nodeData, new RepoNodeVersion(
                     nodeStat.getVersion(),
                     nodeStat.getCversion()
-            ));
+            ),
+                    new Time(nodeStat.getCtime()));
         } catch (Exception e) {
             e.printStackTrace();
             throw generateNodeDataException(
@@ -235,10 +240,10 @@ public class ZkConnector extends ConfRepoConnector {
         }
     }
 
-    private String getPathTail(String fullPath){
-        if(fullPath == null) return "";
+    private String getPathTail(String fullPath) {
+        if (fullPath == null) return "";
         String[] fullPathSegments = fullPath.split("/");
-        if(fullPathSegments == null || fullPathSegments.length < 1) return fullPath;
+        if (fullPathSegments == null || fullPathSegments.length < 1) return fullPath;
         return fullPathSegments[fullPathSegments.length - 1];
     }
 
