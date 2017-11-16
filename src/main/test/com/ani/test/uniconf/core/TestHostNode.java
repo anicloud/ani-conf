@@ -32,6 +32,11 @@ public class TestHostNode {
     }
 
     @Test
+    public void testClusterMasterInit() throws AniDataException, AniRuleException {
+        initMasterNode(1);
+    }
+
+    @Test
     public void testMultiNodesWatcher() throws AniDataException, InterruptedException {
 //        List<AniConfNode> hostNodes = new ArrayList<AniConfNode>(10);
         final CountDownLatch latch = new CountDownLatch(1);
@@ -65,22 +70,7 @@ public class TestHostNode {
             new Thread(new Runnable() {
                 public void run() {
                     try {
-                        initNode("master", finalI)
-                                .setHostNodeHaltingFailureHandlingTx(
-                                        "slave",
-                                        new HostNode.HostFailureListener() {
-                                            public void onHostHaltingFailed(String hostIp) {
-                                                String msg = String.format(
-                                                        "Host halted: %s, by master %d",
-                                                        hostIp.toString(),
-                                                        finalI).toString();
-                                                System.out.println(msg);
-                                            }
-
-                                            public void onFailureProcessingFinished(String hostIp) {
-                                                System.out.println(hostIp.toString());
-                                            }
-                                        });
+                        initMasterNode(finalI);
                         latch.await();
                     } catch (AniDataException e) {
                         e.printStackTrace();
@@ -105,6 +95,25 @@ public class TestHostNode {
             }).start();
         }
         latch.await();
+    }
+
+    private void initMasterNode(int num) throws AniDataException, AniRuleException {
+        initNode("master", num)
+                .setHostNodeHaltingFailureHandlingTx(
+                        "slave",
+                        new HostNode.HostFailureListener() {
+                            public void onHostHaltingFailed(String hostIp) {
+                                String msg = String.format(
+                                        "Host halted: %s, by master %d",
+                                        hostIp.toString(),
+                                        num).toString();
+                                System.out.println(msg);
+                            }
+
+                            public void onFailureProcessingFinished(String hostIp) {
+                                System.out.println(hostIp.toString());
+                            }
+                        });
     }
 
     public HostNode initNode(String role, int num) throws AniDataException {

@@ -193,8 +193,7 @@ public class ZkConnector extends ConfRepoConnector {
         return getNode(nodePath);
     }
 
-    private boolean isNodeExist(String[] path) throws AniDataException {
-        String fullPath = this.getNodePathStr(path);
+    private boolean isNodeExist(String fullPath) throws AniDataException {
         try {
             if (this.client.checkExists().forPath(fullPath) == null)
                 return false;
@@ -210,6 +209,20 @@ public class ZkConnector extends ConfRepoConnector {
         }
     }
 
+    private void createIfNotExists(String fullPath) throws AniDataException {
+        if (isNodeExist(fullPath)) {
+            return;
+        }
+        try {
+            this.client.create().creatingParentsIfNeeded().forPath(fullPath);
+        } catch (Exception e) {
+            throw generateNodeDataException(
+                    "ANI_CONF_ZK_NODE_PATH_CREATE_FAILED",
+                    fullPath,
+                    e);
+        }
+    }
+
     @Override
     public List<String> getChildrenNodesPath(String[] parentNodePath, final NodeEventListener nodeEventListener) throws AniRuleException {
         final String parentNodePathStr = getNodePathStr(parentNodePath);
@@ -219,23 +232,27 @@ public class ZkConnector extends ConfRepoConnector {
                 true
         );
         try {
+            createIfNotExists(parentNodePathStr);
             childrenCache.start(PathChildrenCache.StartMode.POST_INITIALIZED_EVENT);
             if (nodeEventListener != null) {
                 childrenCache.getListenable().addListener(new PathChildrenCacheListener() {
+                    RepoNode getRepoNodeFromEvent(PathChildrenCacheEvent event) {
+                        if (event.getData() == null) {
+                            return getRepoNodeFromStat(null, null);
+                        }
+                        return getRepoNodeFromStat(
+                                event.getData().getData(),
+                                event.getData().getStat());
+                    }
+
                     public void childEvent(CuratorFramework curatorFramework, PathChildrenCacheEvent event) throws Exception {
-                        if (event.getType().equals(PathChildrenCacheEvent.Type.INITIALIZED)){
-                            nodeEventListener.processEvent(new ZkNodeEvent());
-                        }
-                        else{
-                            nodeEventListener.processEvent(
-                                    new ZkNodeEvent(
-                                            getPathTail(event.getData().getPath()),
-                                            event.getType(),
-                                            getRepoNodeFromStat(
-                                                    event.getData().getData(),
-                                                    event.getData().getStat())
-                                    ));
-                        }
+
+                        nodeEventListener.processEvent(
+                                new ZkNodeEvent(
+                                        getPathTail(event.getData().getPath()),
+                                        event.getType(),
+                                        getRepoNodeFromEvent(event)
+                                ));
                     }
                 });
             }
