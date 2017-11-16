@@ -223,13 +223,19 @@ public class ZkConnector extends ConfRepoConnector {
             if (nodeEventListener != null) {
                 childrenCache.getListenable().addListener(new PathChildrenCacheListener() {
                     public void childEvent(CuratorFramework curatorFramework, PathChildrenCacheEvent event) throws Exception {
-                        nodeEventListener.processEvent(new ZkNodeEvent(
-                                getPathTail(event.getData().getPath()),
-                                event.getType(),
-                                getRepoNodeFromStat(
-                                        event.getData().getData(),
-                                        event.getData().getStat())
-                        ));
+                        if (event.getType().equals(PathChildrenCacheEvent.Type.INITIALIZED)){
+                            nodeEventListener.processEvent(new ZkNodeEvent());
+                        }
+                        else{
+                            nodeEventListener.processEvent(
+                                    new ZkNodeEvent(
+                                            getPathTail(event.getData().getPath()),
+                                            event.getType(),
+                                            getRepoNodeFromStat(
+                                                    event.getData().getData(),
+                                                    event.getData().getStat())
+                                    ));
+                        }
                     }
                 });
             }
