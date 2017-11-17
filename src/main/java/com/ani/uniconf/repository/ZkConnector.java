@@ -173,11 +173,14 @@ public class ZkConnector extends ConfRepoConnector {
             nodeDataCache.getListenable().addListener(new NodeCacheListener() {
                 public void nodeChanged() throws Exception {
                     NodeEventType eventType = null;
-                    if (nodeDataCache.getCurrentData() == null) {
+                    Stat stat = null;
+                    if (nodeDataCache == null || nodeDataCache.getCurrentData() == null) {
                         eventType = NodeEventType.REMOVED;
+                        stat = null;
                         nodeDataCache.close();
                     } else {
                         eventType = NodeEventType.UPDATED;
+                        stat = nodeDataCache.getCurrentData().getStat();
                         nodeData.setBytes(nodeDataCache.getCurrentData().getData());
                     }
                     eventListener.processEvent(new ZkNodeEvent(
@@ -185,7 +188,7 @@ public class ZkConnector extends ConfRepoConnector {
                             eventType,
                             getRepoNodeFromStat(
                                     nodeData.getBytes(),
-                                    nodeDataCache.getCurrentData().getStat())
+                                    stat)
                     ));
                 }
             });
