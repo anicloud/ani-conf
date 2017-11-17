@@ -236,7 +236,7 @@ public class ZkConnector extends ConfRepoConnector {
             childrenCache.start(PathChildrenCache.StartMode.POST_INITIALIZED_EVENT);
             if (nodeEventListener != null) {
                 childrenCache.getListenable().addListener(new PathChildrenCacheListener() {
-                    RepoNode getRepoNodeFromEvent(PathChildrenCacheEvent event) {
+                    private RepoNode getRepoNodeFromEvent(PathChildrenCacheEvent event) {
                         if (event.getData() == null) {
                             return getRepoNodeFromStat(null, null);
                         }
@@ -244,12 +244,14 @@ public class ZkConnector extends ConfRepoConnector {
                                 event.getData().getData(),
                                 event.getData().getStat());
                     }
-
+                    private String getNodePath(PathChildrenCacheEvent event){
+                        if(event.getData() == null) return null;
+                        return event.getData().getPath();
+                    }
                     public void childEvent(CuratorFramework curatorFramework, PathChildrenCacheEvent event) throws Exception {
-
                         nodeEventListener.processEvent(
                                 new ZkNodeEvent(
-                                        getPathTail(event.getData().getPath()),
+                                        getPathTail(getNodePath(event)),
                                         event.getType(),
                                         getRepoNodeFromEvent(event)
                                 ));
@@ -264,7 +266,7 @@ public class ZkConnector extends ConfRepoConnector {
     }
 
     private String getPathTail(String fullPath) {
-        if (fullPath == null) return "";
+        if (fullPath == null) return null;
         String[] fullPathSegments = fullPath.split("/");
         if (fullPathSegments == null || fullPathSegments.length < 1) return fullPath;
         return fullPathSegments[fullPathSegments.length - 1];
